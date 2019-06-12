@@ -1,0 +1,59 @@
+image:
+  repository: edoburu/pgbouncer
+  tag: 1.9.0
+  pullPolicy: IfNotPresent
+
+service:
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "9127"
+  type: ClusterIP
+  # nodePort:
+
+pgbouncer:
+  maxUserConnections: "100"
+  maxDBConnections: "500"
+  poolMode: "transaction"
+  maxClientConnections: "100"
+  minPoolSize: "0"
+  reversePoolSize: "0"
+  reversePoolTimeout: "5.0"
+  serverRoundRobin: "0"
+  defaultPoolSize: "20"
+  serverResetQuery: "DISCARD ALL"
+  serverResetQueryAlways: "0"
+  serverCheckQuery: "SELECT 1;"
+  serverLifetime: " 3600.0"
+  serverConnectTimeout: "15.0"
+  serverLoginRetry: "15.0"
+  serverIdleTimeout: "600.0"
+  clientLoginTimeout: "60.0"
+  serverLoginRetry: "15.0"
+  listenAddr: "0.0.0.0"
+  listenPort: "5432"
+  databaseURIExistingSecret: "dbconfig"
+  databaseURIExistingSecretConnectionURIKey: "uri"
+  databaseURI: ""
+
+exporter:
+  image:
+    repository: spreaker/prometheus-pgbouncer-exporter
+    tag: latest
+    pullPolicy: IfNotPresent
+  existingSecretExporterBouncerUser: "bounceruri"
+  existingSecretExporterBouncerUserKey: "user"
+  existingSecretExporterBouncerPassword: "bounceruri"
+  existingSecretExporterBouncerPasswordKey: "password"
+  rawUser: ""
+  rawPassword: ""
+
+livenessProbe:
+  initialDelaySeconds: 30
+  timeoutSeconds: 30
+  successThreshold: 1
+  failureThreshold: 3
+
+resources: {}
+nodeSelector: {}
+tolerations: []
+affinity: {}

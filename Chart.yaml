@@ -1,0 +1,8 @@
+apiVersion: v1
+description: Chart for PGBouncer and PGBouncer Exporter
+name: pgbouncer
+version: 0.0.6
+maintainers:
+  - name: Rafael Gonçalves
+    email: rafagonc77@yahoo.com.br
+    url: https://github.com/rafagonc

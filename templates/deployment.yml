@@ -1,0 +1,143 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: {{ .Release.Name }}
+    chart: {{ .Chart.Name }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  selector:
+    matchLabels:
+      app:  {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}
+    spec:
+      containers:
+        - name: pgbouncer
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+ {{ if .Values.pgbouncer.databaseURIExistingSecret }}
+          - name: DATABASE_URL
+            valueFrom:
+              secretKeyRef:
+                name: {{ .Values.pgbouncer.databaseURIExistingSecret }}
+                key: {{ .Values.pgbouncer.databaseURIExistingSecretConnectionURIKey }}
+{{ else }}
+          - name: DATABASE_URL
+            value: "{{ .Values.pgbouncer.databaseURI }}"
+{{ end }}
+          - name: MAX_USER_CONNECTIONS
+            value: "{{ .Values.pgbouncer.maxUserConnections }}" 
+          - name: MAX_DB_CONNECTIONS
+            value: "{{ .Values.pgbouncer.maxDBConnections }}"  
+          - name: POOL_MODE
+            value: "{{ .Values.pgbouncer.poolMode }}" 
+          - name: MAX_CLIENT_CONN
+            value: "{{ .Values.pgbouncer.maxClientConnections }}"
+          - name: MIN_POOL_SIZE
+            value: "{{ .Values.pgbouncer.minPoolSize }}"
+          - name: RESERVE_POOL_SIZE
+            value: "{{ .Values.pgbouncer.reversePoolSize }}"
+          - name: RESERVE_POOL_TIMEOUT
+            value: "{{ .Values.pgbouncer.reversePoolTimeout }}"
+          - name: SERVER_ROUND_ROBIN
+            value: "{{ .Values.pgbouncer.serverRoundRobin }}"
+          - name: DEFAULT_POOL_SIZE
+            value: "{{ .Values.pgbouncer.defaultPoolSize }}"
+          - name: SERVER_RESET_QUERY
+            value: "{{ .Values.pgbouncer.serverResetQuery }}"
+          - name: SERVER_RESET_QUERY_ALWAYS
+            value: "{{ .Values.pgbouncer.serverResetQueryAlways }}"
+          - name: SERVER_CHECK_QUERY
+            value: "{{ .Values.pgbouncer.serverCheckQuery }}"
+          - name: SERVER_LIFETIME
+            value: "{{ .Values.pgbouncer.serverLifetime }}"
+          - name: SERVER_CONNECT_TIMEOUT
+            value: "{{ .Values.pgbouncer.serverConnectTimeout }}"
+          - name: SERVER_LOGIN_RETRY
+            value: "{{ .Values.pgbouncer.serverLoginRetry }}"
+          - name: SERVER_IDLE_TIMEOUT
+            value: "{{ .Values.pgbouncer.serverIdleTimeout }}"
+          - name: SERVER_CONNECT_TIMEOUT
+            value: "{{ .Values.pgbouncer.serverConnectTimeout }}"
+          - name: CLIENT_LOGIN_TIMEOUT
+            value: "{{ .Values.pgbouncer.clientLoginTimeout }}"
+          - name: LISTEN_ADDR
+            value: "{{ .Values.pgbouncer.listenAddr }}"
+          - name: LISTEN_PORT
+            value: "{{ .Values.pgbouncer.listenPort }}"
+          ports:
+            - name: pgbouncer
+              containerPort: 5432
+          livenessProbe:
+            initialDelaySeconds: {{ .Values.livenessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.livenessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.livenessProbe.timeoutSeconds }}
+            successThreshold: {{ .Values.livenessProbe.successThreshold }}
+            failureThreshold: {{ .Values.livenessProbe.failureThreshold }}
+            tcpSocket:
+              port: 5432
+          resources:
+{{ toYaml .Values.resources | indent 12 }}
+          lifecycle:
+            preStop:
+              exec:
+                command: ["/bin/sh", "-c", "killall -INT pgbouncer && sleep 120"]
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ['all']
+        - name: metrics
+          image: "{{ .Values.exporter.image.repository }}:{{ .Values.exporter.image.tag }}"
+          imagePullPolicy: {{ .Values.exporter.image.pullPolicy }}
+          image: spreaker/prometheus-pgbouncer-exporter
+          env:
+          - name: PGBOUNCER_HOST
+            value: "localhost"
+ {{ if .Values.exporter.existingSecretExporterBouncerUser }}
+          - name: PGBOUNCER_USER
+            valueFrom:
+              secretKeyRef:
+                name: {{ .Values.exporter.existingSecretExporterBouncerUser }}
+                key: {{ .Values.exporter.existingSecretExporterBouncerUserKey }}
+{{ else }}
+          - name: PGBOUNCER_USER
+            value: "{{ .Values.exporter.config.user }}"
+{{ end }}
+ {{ if .Values.exporter.existingSecretExporterBouncerPassword }}
+          - name: PGBOUNCER_PASS
+            valueFrom:
+              secretKeyRef:
+                name: {{ .Values.exporter.existingSecretExporterBouncerPassword }}
+                key: {{ .Values.exporter.existingSecretExporterBouncerPasswordKey }}
+{{ else }}
+          - name: PGBOUNCER_PASS
+            value: "{{ .Values.exporter.config.password }}"
+{{ end }}
+          - name: PGBOUNCER_PORT
+            value: "5432"
+          - name: PGBOUNCER_EXPORTER_HOST
+            value: "0.0.0.0"
+          ports:
+            - name: metrics
+              containerPort: 9127
+    {{- with .Values.nodeSelector }}
+      nodeSelector:
+{{ toYaml . | indent 8 }}
+    {{- end }}
+    {{- with .Values.affinity }}
+      affinity:
+{{ toYaml . | indent 8 }}
+    {{- end }}
+    {{- with .Values.tolerations }}
+      tolerations:
+{{ toYaml . | indent 8 }}
+    {{- end }}
+
+          
