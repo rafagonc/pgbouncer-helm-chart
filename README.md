@@ -1,9 +1,5 @@
 # PGBouncer Helm Chart
 
-This is an implementation of PGBouncer found here:
-
- * https://github.com/aerospike/aerospike-kubernetes
-
 ## Pre Requisites:
 
 * Kubernetes 1.7+ with beta APIs enabled and support for statefulsets
