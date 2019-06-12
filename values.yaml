@@ -31,8 +31,8 @@ pgbouncer:
   serverLoginRetry: "15.0"
   listenAddr: "0.0.0.0"
   listenPort: "5432"
-  databaseURIExistingSecret: "dbconfig"
-  databaseURIExistingSecretConnectionURIKey: "uri"
+  databaseURIExistingSecret: ""
+  databaseURIExistingSecretConnectionURIKey: ""
   databaseURI: ""
 
 exporter:
@@ -40,10 +40,10 @@ exporter:
     repository: spreaker/prometheus-pgbouncer-exporter
     tag: latest
     pullPolicy: IfNotPresent
-  existingSecretExporterBouncerUser: "bounceruri"
-  existingSecretExporterBouncerUserKey: "user"
-  existingSecretExporterBouncerPassword: "bounceruri"
-  existingSecretExporterBouncerPasswordKey: "password"
+  existingSecretExporterBouncerUser: ""
+  existingSecretExporterBouncerUserKey: ""
+  existingSecretExporterBouncerPassword: ""
+  existingSecretExporterBouncerPasswordKey: ""
   rawUser: ""
   rawPassword: ""
 
